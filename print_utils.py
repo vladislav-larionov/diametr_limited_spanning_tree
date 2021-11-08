@@ -1,3 +1,4 @@
+from tree import Tree
 
 
 def print_matrix(matrix):
@@ -5,10 +6,10 @@ def print_matrix(matrix):
         print(", ".join(map(str, row)))
 
 
-def print_result(orig_graph, tree_nodes, tree_edges):
-    print(f'c Вес дерева = {sum(map(lambda e: e[2],tree_edges))}, число листьев = ?')
-    print(f'p edge {len(orig_graph)} {len(tree_edges)}')
-    for e in sorted([f"e {edge_to_str(edge)}\n" for edge in tree_edges]):
+def print_result(orig_graph, tree: Tree):
+    print(f'c Вес дерева = {sum(map(lambda e: e[2], tree.edges))}, число листьев = ?')
+    print(f'p edge {len(orig_graph)} {len(tree.edges)}')
+    for e in sorted([f"e {edge_to_str(edge)}\n" for edge in tree.edges]):
         print(e, end='')
 
 
@@ -29,10 +30,10 @@ def print_result_to_file(k, orig_graph, tree_edges):
 
 
 def edge_to_str(edge):
-    if int(edge[0].data) < int(edge[1].data):
-        return edge[0].data + " " + edge[1].data
+    if edge[0] < edge[1]:
+        return str(edge[0]) + " " + str(edge[1])
     else:
-        return edge[1].data + " " + edge[0].data
+        return str(edge[1]) + " " + str(edge[0])
 
 
 def print_matrix_graph(matrix):
