@@ -7,17 +7,17 @@ def print_matrix(matrix):
 
 
 def print_result(orig_graph, tree: Tree):
-    print(f'c Вес дерева = {sum(map(lambda e: e[2], tree.edges))}, число листьев = ?')
+    print(f'c Вес дерева = {sum(map(lambda e: e[2], tree.edges))}, диаметр = {tree.diameter}')
     print(f'p edge {len(orig_graph)} {len(tree.edges)}')
     for e in sorted([f"e {edge_to_str(edge)}\n" for edge in tree.edges]):
         print(e, end='')
 
 
-def print_result_to_file(k, orig_graph, tree_edges):
+def print_result_to_file(k, orig_graph, tree):
     with open(f'temp_res_{k}.txt', 'a+', encoding='utf-8') as file:
-        file.write(f'c Вес дерева = {sum(map(lambda e: e[2],tree_edges))}, число листьев = ?\n')
-        file.write(f'p edge {len(orig_graph)} {len(tree_edges)}\n')
-        for e in sorted([f"e {edge_to_str(edge)}\n" for edge in tree_edges]):
+        file.write(f'c Вес дерева = {sum(map(lambda e: e[2], tree.edges))}, диаметр = {tree.diameter}\n')
+        file.write(f'p edge {len(orig_graph)} {len(tree.edges)}\n')
+        for e in sorted([f"e {edge_to_str(edge)}\n" for edge in tree.edges]):
             file.write(e)
         file.write("\n")
         # for edge in tree_edges:
