@@ -8,6 +8,9 @@ def edge_to_str(edge):
         return str(edge[1]) + " " + str(edge[0])
 
 
+INF = 999999999
+
+
 @dataclasses.dataclass
 class Tree:
     nodes: set = dataclasses.field(default_factory=set)
@@ -28,3 +31,25 @@ class Tree:
 
     def __repr__(self):
         return f'Tree(nodes={sorted(self.nodes)}, edges={sorted([f"{edge_to_str(edge)} {edge[2]}" for edge in self.edges])})'
+
+    @property
+    def distance_matrix(self):
+        n = len(self.nodes)
+        adj_matrix = self.adj_matrix
+        for i in range(n):
+            for j in range(n):
+                if i != j and adj_matrix[i][j] == 0:
+                    adj_matrix[i][j] = INF
+        for k in range(n):
+            for i in range(n):
+                for j in range(n):
+                    adj_matrix[i][j] = min(adj_matrix[i][j], adj_matrix[i][k] + adj_matrix[k][j])
+        for i in range(n):
+            for j in range(n):
+                if i != j and adj_matrix[i][j] == INF:
+                    adj_matrix[i][j] = 0
+        return adj_matrix
+
+    @property
+    def diameter(self):
+        return max(map(max, self.distance_matrix))

@@ -39,7 +39,7 @@ def edge_to_str(edge):
 def print_matrix_graph(matrix):
     print('   |\t', end='')
     for i, _ in enumerate(matrix):
-        print(f'{i+1:3}\t', end='')
+        print(f'{i:3}\t', end='')
     print()
     for j, row in enumerate(matrix):
-        print(f'{j+1:3}|\t' + "\t".join([f'{el:3}' for el in row]))
+        print(f'{j:3}|\t' + "\t".join([f'{el:3}' for el in row]))

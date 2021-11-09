@@ -1,7 +1,7 @@
 from sys import argv
 
 from graph_reader import read_matrix
-from print_utils import print_matrix, print_result
+from print_utils import print_matrix, print_result, print_matrix_graph
 from tree import Tree
 
 
@@ -52,8 +52,9 @@ def main():
     d = int(len(graph) / 32 + 2)
     tree = find_diameter_limited_spanning_tree(graph, d)
     print(tree.weight)
-    print_matrix(tree.adj_matrix)
-    # print_result(graph, tree)
+    adj_matrix = tree.adj_matrix
+    print_matrix(adj_matrix)
+    print(tree.diameter)
 
 
 if __name__ == '__main__':
