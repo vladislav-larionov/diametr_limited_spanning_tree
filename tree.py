@@ -1,5 +1,8 @@
 import dataclasses
 
+import print_utils
+from distance_matrix import DistanceMatrix
+
 
 def edge_to_str(edge):
     if edge[0] < edge[1]:
@@ -27,6 +30,7 @@ class Tree:
         for it in self.edges:
             r, c, v = it
             matrix[r][c] = v
+            matrix[c][r] = v
         return matrix
 
     def __repr__(self):
@@ -34,22 +38,9 @@ class Tree:
 
     @property
     def distance_matrix(self):
-        n = len(self.nodes)
-        adj_matrix = self.adj_matrix
-        for i in range(n):
-            for j in range(n):
-                if i != j and adj_matrix[i][j] == 0:
-                    adj_matrix[i][j] = INF
-        for k in range(n):
-            for i in range(n):
-                for j in range(n):
-                    adj_matrix[i][j] = min(adj_matrix[i][j], adj_matrix[i][k] + adj_matrix[k][j])
-        for i in range(n):
-            for j in range(n):
-                if i != j and adj_matrix[i][j] == INF:
-                    adj_matrix[i][j] = 0
-        return adj_matrix
+        return DistanceMatrix(self.adj_matrix)
 
     @property
     def diameter(self):
-        return max(map(max, self.distance_matrix))
+        return max(map(max, self.distance_matrix.distance_matrix))
+
