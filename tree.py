@@ -18,7 +18,7 @@ INF = 999999999
 class Tree:
     n: int
     nodes: set = dataclasses.field(default_factory=set)
-    edges: set = dataclasses.field(default_factory=set)
+    edges: list = dataclasses.field(default_factory=list)
 
     @property
     def weight(self):
@@ -37,12 +37,34 @@ class Tree:
         return f'Tree(nodes={sorted(self.nodes)}, edges={sorted([f"{edge_to_str(edge)} {edge[2]}" for edge in self.edges])})'
 
     @property
-    def distance_matrix(self):
-        return DistanceMatrix(self.adj_matrix)
-
-    @property
     def diameter(self):
-        return max(map(max, self.distance_matrix.distance_matrix))
+        tree = self.adj_matrix
+        from_node = to_node = 0
+        start_node = self.edges[0][0]
+        dist = self._bfs(tree, self.n, start_node)
+        for i, value in enumerate(dist):
+            if dist[i] > dist[from_node]:
+                from_node = i
+        dist = self._bfs(tree, self.n, from_node)
+        for i, value in enumerate(dist):
+            if dist[i] > dist[to_node]:
+                to_node = i
+        return from_node, to_node, dist[to_node]
+
+    def _bfs(self, graph, n, node):
+        dist = [0 for i in range(n)]
+        queue = []
+        visited = set()
+        visited.add(node)
+        queue.append(node)
+        while queue:
+            s = queue.pop(0)
+            for neighbor_i, neighbor_dist in enumerate(graph[s]):
+                if neighbor_dist != 0 and neighbor_i not in visited:
+                    dist[neighbor_i] = dist[s] + 1
+                    visited.add(neighbor_i)
+                    queue.append(neighbor_i)
+        return dist
 
     def remove_edge(self, edge):
         adj_matrix = self.adj_matrix
