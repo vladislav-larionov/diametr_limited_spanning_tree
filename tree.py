@@ -16,8 +16,9 @@ INF = 999999999
 
 @dataclasses.dataclass
 class Tree:
+    n: int
     nodes: set = dataclasses.field(default_factory=set)
-    edges: list = dataclasses.field(default_factory=list)
+    edges: set = dataclasses.field(default_factory=set)
 
     @property
     def weight(self):
@@ -25,8 +26,7 @@ class Tree:
 
     @property
     def adj_matrix(self):
-        n = len(self.nodes)
-        matrix = [[0] * n for _ in range(n)]
+        matrix = [[0] * self.n for _ in range(self.n)]
         for it in self.edges:
             r, c, v = it
             matrix[r][c] = v
@@ -44,3 +44,14 @@ class Tree:
     def diameter(self):
         return max(map(max, self.distance_matrix.distance_matrix))
 
+    def remove_edge(self, edge):
+        adj_matrix = self.adj_matrix
+        for e in self.edges:
+            if e[0] == edge[0] and e[1] == edge[1] or e[0] == edge[1] and e[1] == edge[0]:
+                self.edges.remove(e)
+                adj_matrix[e[0]][e[1]] = 0
+                adj_matrix[e[1]][e[0]] = 0
+                break
+        for i, row in enumerate(adj_matrix):
+            if sum(row) == 0:
+                self.nodes.remove(i)

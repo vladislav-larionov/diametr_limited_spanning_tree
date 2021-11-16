@@ -8,6 +8,9 @@ class DistanceMatrix:
         self.distance_matrix = list(map(list, adj_matrix))
         self.path_matrix = [[None for i in range(self.n)] for j in range(self.n)]
         self._create_distance_matrix()
+        self.diameter = max(map(max, self.distance_matrix))
+        self.diameter_path = self._diameter_path()
+        self.diameter_path_in_edges = len(self.diameter_path)
 
     def _create_distance_matrix(self):
         for i in range(self.n):
@@ -35,7 +38,7 @@ class DistanceMatrix:
         #     for j in range(i, self.n):
         #         a[i][j] = len(self.path(i, j))
 
-    def path(self, from_node, to_node):
+    def path(self, from_node, to_node) -> list:
         if self.path_matrix[from_node][to_node] is None:
             return []
         p = [from_node]
@@ -43,3 +46,8 @@ class DistanceMatrix:
             from_node = self.path_matrix[from_node][to_node]
             p.append(from_node)
         return p
+
+    def _diameter_path(self) -> list:
+        for i, row in enumerate(self.distance_matrix):
+            if self.diameter in row:
+                return self.path(i, row.index(self.diameter))
