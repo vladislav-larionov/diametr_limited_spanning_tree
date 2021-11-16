@@ -1,4 +1,3 @@
-from tree import Tree
 
 
 def print_matrix(matrix):
@@ -6,7 +5,7 @@ def print_matrix(matrix):
         print(", ".join(map(str, row)))
 
 
-def print_result(orig_graph, tree: Tree):
+def print_result(orig_graph, tree):
     print(f'c Вес дерева = {sum(map(lambda e: e[2], tree.edges))}, диаметр = {tree.distance_matrix.diameter_path_in_edges}, диаметр_w = {tree.diameter}')
     print(f'p edge {len(orig_graph)} {len(tree.edges)}')
     for e in sorted([f"e {edge_to_str(edge)}\n" for edge in tree.edges]):

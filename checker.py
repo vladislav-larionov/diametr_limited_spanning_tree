@@ -1,7 +1,8 @@
 import sys
 
+from checkers.connected_components_counter import count_connected_components
 from graph_reader import read_matrix
-from loop_finder import has_loop
+from checkers.loop_finder import has_loop
 
 
 def read_res(filepath):
@@ -14,7 +15,7 @@ def read_res(filepath):
         print(f'n = {n}')
         # for row in edges:
         #     print(row)
-    return edges, weight
+    return edges, weight, len(edges) + 1
 
 
 def check_edge_existing(graph, edges, weight):
@@ -26,10 +27,12 @@ def check_edge_existing(graph, edges, weight):
 
 def main():
     res_file_path = sys.argv[1]
-    edges, weight = read_res(res_file_path)
-    graph = read_matrix(f'Taxicab_{len(edges) + 1}_matrix.txt')
+    edges, weight, n = read_res(res_file_path)
+    graph = read_matrix(f'Taxicab_{n}_matrix.txt')
     print(f'Edges existing: {check_edge_existing(graph, edges, weight)}')
-    print(f'Loop existing:  {has_loop(len(graph), edges)}')
+    print(f'Loop existing:  {has_loop(n, edges)}')
+    print(f'Connected components:  {count_connected_components(n, edges)}')
+
 
 
 if __name__ == '__main__':
