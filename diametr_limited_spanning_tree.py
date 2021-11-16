@@ -1,25 +1,37 @@
 from sys import argv
 
 from graph_reader import read_matrix
-from print_utils import print_matrix, print_result, print_result_to_file
+from print_utils import print_matrix, print_result, print_result_to_file, edge_to_str
 from timer_util import timeit
 from tree import Tree
 
 
-# def find_diameter_limited_spanning_tree(graph, d):
-#     solution = None
-#     for i in range(1, len(graph)):
-#         spanning_tree = find_spanning_tree(graph, i, d)
-#         print_result_to_file(d, graph, spanning_tree)
-#         if not solution and solution.weight > spanning_tree.weight:
-#             solution = spanning_tree
-#     return solution
+def result_to_str(result: Tree):
+    res = f'{sum(map(lambda e: e[2], result.edges))} {result.diameter[2]} {result.diameter}'
+    res += ''.join(sorted([f"e {edge_to_str(edge)}\n" for edge in result.edges]))
+    return res
 
 
 def find_diameter_limited_spanning_tree(graph, d):
-    solution = find_spanning_tree(graph, 0, d)
-    print_result_to_file(d, graph, solution)
+    solution = None
+    results = set()
+    for i in range(1, len(graph)):
+        spanning_tree = find_spanning_tree(graph, i, d)
+        stringed_res = result_to_str(spanning_tree)
+        if stringed_res not in results:
+            print_result_to_file(d, graph, spanning_tree)
+        results.add(stringed_res)
+        if solution is None:
+            solution = spanning_tree
+        elif solution.weight > spanning_tree.weight:
+            solution = spanning_tree
     return solution
+
+
+# def find_diameter_limited_spanning_tree(graph, d):
+#     solution = find_spanning_tree(graph, 0, d)
+#     print_result_to_file(d, graph, solution)
+#     return solution
 
 
 def find_spanning_tree(graph, start_node: int, d):
@@ -35,10 +47,8 @@ def find_spanning_tree(graph, start_node: int, d):
             nearest_node = find_nearest_neighbors(graph, tree, node)
             candidates.add((node, nearest_node, graph[node][nearest_node]))
         candidates.difference_update(bad_edges)
-        if not candidates:
-            print(tree)
         while True:
-            min_edge = find_min_edge(candidates, tree)
+            min_edge = find_min_edge(candidates)
             tree.nodes.add(min_edge[1])
             tree.edges.append(min_edge)
             diameter = tree.diameter
@@ -61,9 +71,7 @@ def find_nearest_neighbors(graph, tree, node):
     return node_index
 
 
-def find_min_edge(edges, tree):
-    # filtered = filter(lambda edge: edge[1] not in tree.nodes, edges)
-    # return min(filtered, key=lambda edge: edge[2])
+def find_min_edge(edges):
     return min(edges, key=lambda edge: edge[2])
 
 
