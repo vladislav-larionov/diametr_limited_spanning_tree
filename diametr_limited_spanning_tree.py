@@ -7,7 +7,8 @@ from tree import Tree
 
 
 def result_to_str(result: Tree):
-    res = f'{result.weight} {result.diameter[2]} {result.diameter}'
+    diameter = result.diameter
+    res = f'{result.weight} {diameter[2]} {edge_to_str([diameter[0], diameter[1]])}'
     res += ''.join(sorted([f"e {edge_to_str(edge)}\n" for edge in result.edges]))
     return res
 
@@ -17,7 +18,7 @@ def find_diameter_limited_spanning_tree(graph, n, d):
     results = set()
     # for i in range(0, len(graph), 4):
     for i in range(n):
-        spanning_tree = find_spanning_tree(graph, n, i, d, solution.weight if solution else 0)
+        spanning_tree = find_spanning_tree(graph, n, i, d, solution.weight if solution else None)
         if not spanning_tree:
             continue
         stringed_res = result_to_str(spanning_tree)
@@ -31,13 +32,14 @@ def find_diameter_limited_spanning_tree(graph, n, d):
     return solution
 
 
-# def find_diameter_limited_spanning_tree(graph, d):
-#     solution = find_spanning_tree(graph, 0, d)
-#     print_result_to_file(d, graph, solution)
+# def find_diameter_limited_spanning_tree(graph, n, d):
+#     solution = find_spanning_tree(graph, n, 0, d, None)
+#     # print_result_to_file(d, graph, solution)
 #     return solution
 
 def find_spanning_tree(graph, n: int,  start_node: int, d, old_res: int):
     # TODO  подумать о том, чтобы дополнять список кандидатов при поиске соседей и добавлении вершины
+    # TODO  опробовать брать рёбра, которые дают наименьший диаметр
     tree = Tree(n)
     tree.nodes.add(start_node)
     max_edge_count = tree.n - 1
