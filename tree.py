@@ -19,18 +19,35 @@ class Tree:
     nodes: set = dataclasses.field(default_factory=set)
     edges: list = dataclasses.field(default_factory=list)
 
+    def __post_init__(self):
+        self.adj_matrix = [[0] * self.n for _ in range(self.n)]
+
     @property
     def weight(self):
         return sum(edge[2] for edge in self.edges)
 
-    @property
-    def adj_matrix(self):
-        matrix = [[0] * self.n for _ in range(self.n)]
-        for it in self.edges:
-            r, c, v = it
-            matrix[r][c] = v
-            matrix[c][r] = v
-        return matrix
+    def add_edge(self, edge: tuple):
+        self.adj_matrix[edge[0]][edge[1]] = edge[2]
+        self.adj_matrix[edge[1]][edge[0]] = edge[2]
+        self.edges.append(edge)
+
+    def remove_edge(self, edge: tuple):
+        self.adj_matrix[edge[0]][edge[1]] = 0
+        self.adj_matrix[edge[1]][edge[0]] = 0
+        self.edges.remove(edge)
+
+    def remove_edge_by_index(self, index: int):
+        edge = self.edges[index]
+        self.remove_edge(edge)
+
+    # @property
+    # def adj_matrix(self):
+    #     matrix = [[0] * self.n for _ in range(self.n)]
+    #     for it in self.edges:
+    #         r, c, v = it
+    #         matrix[r][c] = v
+    #         matrix[c][r] = v
+    #     return matrix
 
     def __repr__(self):
         return f'Tree(nodes={sorted(self.nodes)}, edges={sorted([f"{edge_to_str(edge)} {edge[2]}" for edge in self.edges])})'
@@ -65,15 +82,3 @@ class Tree:
                     visited.add(neighbor_i)
                     queue.append(neighbor_i)
         return dist
-
-    def remove_edge(self, edge):
-        adj_matrix = self.adj_matrix
-        for e in self.edges:
-            if e[0] == edge[0] and e[1] == edge[1] or e[0] == edge[1] and e[1] == edge[0]:
-                self.edges.remove(e)
-                adj_matrix[e[0]][e[1]] = 0
-                adj_matrix[e[1]][e[0]] = 0
-                break
-        for i, row in enumerate(adj_matrix):
-            if sum(row) == 0:
-                self.nodes.remove(i)

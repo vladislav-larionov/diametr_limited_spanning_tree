@@ -56,12 +56,12 @@ def find_spanning_tree(graph, n: int,  start_node: int, d, old_res: int):
         while True:
             min_edge = find_min_edge(candidates)
             tree.nodes.add(min_edge[1])
-            tree.edges.append(min_edge)
+            tree.add_edge(min_edge)
             diameter = tree.diameter
             if diameter[2] <= d:
                 break
             tree.nodes.remove(min_edge[1])
-            tree.edges.remove(min_edge)
+            tree.remove_edge_by_index(-1)
             candidates.remove(min_edge)
             bad_edges.add(min_edge)
     return tree
