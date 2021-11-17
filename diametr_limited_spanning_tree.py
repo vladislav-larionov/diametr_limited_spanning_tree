@@ -17,7 +17,9 @@ def find_diameter_limited_spanning_tree(graph, n, d):
     results = set()
     # for i in range(0, len(graph), 4):
     for i in range(n):
-        spanning_tree = find_spanning_tree(graph, n, i, d)
+        spanning_tree = find_spanning_tree(graph, n, i, d, solution.weight if solution else 0)
+        if not spanning_tree:
+            continue
         stringed_res = result_to_str(spanning_tree)
         if stringed_res not in results:
             print_result_to_file(d, graph, spanning_tree)
@@ -34,19 +36,21 @@ def find_diameter_limited_spanning_tree(graph, n, d):
 #     print_result_to_file(d, graph, solution)
 #     return solution
 
-# TODO  попробовать передавать вес предыдущего результата
-def find_spanning_tree(graph, n: int,  start_node: int, d):
-    # TODO  Не искать всё время, а брать из отсортированного списка
-    #  подумать о том, чтобы дополнять список кандидатов при поиске соседей и добавлении вершины
+def find_spanning_tree(graph, n: int,  start_node: int, d, old_res: int):
+    # TODO  подумать о том, чтобы дополнять список кандидатов при поиске соседей и добавлении вершины
     tree = Tree(n)
     tree.nodes.add(start_node)
     max_edge_count = tree.n - 1
     bad_edges = set()
     for i in range(max_edge_count):
+        if old_res and tree.weight > old_res:
+            return None
         candidates = set()
         for node in tree.nodes:
             # TODO Попробовать брать все с одинаковым весом
-            nearest_node = find_nearest_neighbors(graph, tree, node)
+            # nearest_nodes = find_nearest_neighbors(graph, tree, node)
+            # candidates.update((node, nearest_node, graph[node][nearest_node]) for nearest_node in nearest_nodes)
+            nearest_node = find_nearest_neighbor(graph, tree, node)
             candidates.add((node, nearest_node, graph[node][nearest_node]))
         candidates.difference_update(bad_edges)
         while True:
@@ -63,7 +67,7 @@ def find_spanning_tree(graph, n: int,  start_node: int, d):
     return tree
 
 
-def find_nearest_neighbors(graph, tree, node):
+def find_nearest_neighbor(graph, tree, node):
     min_dist = 999999999
     node_index = -1
     for neighbor_i, neighbor_dist in enumerate(graph[node]):
@@ -71,6 +75,20 @@ def find_nearest_neighbors(graph, tree, node):
             min_dist = neighbor_dist
             node_index = neighbor_i
     return node_index
+
+
+def find_nearest_neighbors(graph, tree, node) -> list:
+    min_dist = 999999999
+    node_indies = []
+    for neighbor_i, neighbor_dist in enumerate(graph[node]):
+        if neighbor_i not in tree.nodes and neighbor_dist != 0:
+            if neighbor_dist < min_dist:
+                min_dist = neighbor_dist
+                node_indies.clear()
+                node_indies.append(neighbor_i)
+            elif neighbor_dist == min_dist:
+                node_indies.append(neighbor_i)
+    return node_indies
 
 
 def find_min_edge(edges):
