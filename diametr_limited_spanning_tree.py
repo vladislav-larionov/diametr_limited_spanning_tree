@@ -7,16 +7,17 @@ from tree import Tree
 
 
 def result_to_str(result: Tree):
-    res = f'{sum(map(lambda e: e[2], result.edges))} {result.diameter[2]} {result.diameter}'
+    res = f'{result.weight} {result.diameter[2]} {result.diameter}'
     res += ''.join(sorted([f"e {edge_to_str(edge)}\n" for edge in result.edges]))
     return res
 
 
-def find_diameter_limited_spanning_tree(graph, d):
+def find_diameter_limited_spanning_tree(graph, n, d):
     solution = None
     results = set()
-    for i in range(1, len(graph)):
-        spanning_tree = find_spanning_tree(graph, i, d)
+    # for i in range(0, len(graph), 4):
+    for i in range(n):
+        spanning_tree = find_spanning_tree(graph, n, i, d)
         stringed_res = result_to_str(spanning_tree)
         if stringed_res not in results:
             print_result_to_file(d, graph, spanning_tree)
@@ -33,17 +34,18 @@ def find_diameter_limited_spanning_tree(graph, d):
 #     print_result_to_file(d, graph, solution)
 #     return solution
 
-
-def find_spanning_tree(graph, start_node: int, d):
+# TODO  попробовать передавать вес предыдущего результата
+def find_spanning_tree(graph, n: int,  start_node: int, d):
     # TODO  Не искать всё время, а брать из отсортированного списка
     #  подумать о том, чтобы дополнять список кандидатов при поиске соседей и добавлении вершины
-    tree = Tree(len(graph))
+    tree = Tree(n)
     tree.nodes.add(start_node)
     max_edge_count = tree.n - 1
     bad_edges = set()
     for i in range(max_edge_count):
         candidates = set()
         for node in tree.nodes:
+            # TODO Попробовать брать все с одинаковым весом
             nearest_node = find_nearest_neighbors(graph, tree, node)
             candidates.add((node, nearest_node, graph[node][nearest_node]))
         candidates.difference_update(bad_edges)
@@ -79,8 +81,9 @@ def find_min_edge(edges):
 def main():
     graph = read_matrix(argv[1])
     d = int(len(graph) / 32 + 2)
-    print(f'Max diameter is {d}')
-    tree = find_diameter_limited_spanning_tree(graph, d)
+    n = len(graph)
+    print(f'Max diameter = {d}', f'N = {n}', sep='\n')
+    tree = find_diameter_limited_spanning_tree(graph, n, d)
     print_result(graph, tree)
     # print_matrix(tree.adj_matrix)
 

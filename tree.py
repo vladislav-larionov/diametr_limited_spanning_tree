@@ -1,7 +1,6 @@
 import dataclasses
 
-import print_utils
-from distance_matrix import DistanceMatrix
+from collections import deque
 
 
 def edge_to_str(edge):
@@ -39,6 +38,7 @@ class Tree:
     @property
     def diameter(self):
         tree = self.adj_matrix
+        # TODO подкумать как использовать только рёбра
         from_node = to_node = 0
         start_node = self.edges[0][0]
         dist = self._bfs(tree, self.n, start_node)
@@ -53,12 +53,12 @@ class Tree:
 
     def _bfs(self, graph, n, node):
         dist = [0 for i in range(n)]
-        queue = []
+        queue = deque()
         visited = set()
         visited.add(node)
         queue.append(node)
         while queue:
-            s = queue.pop(0)
+            s = queue.popleft()
             for neighbor_i, neighbor_dist in enumerate(graph[s]):
                 if neighbor_dist != 0 and neighbor_i not in visited:
                     dist[neighbor_i] = dist[s] + 1
