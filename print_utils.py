@@ -5,6 +5,13 @@ def print_matrix(matrix):
         print(", ".join(map(str, row)))
 
 
+def matrix_to_str(matrix):
+    res = ''
+    for row in matrix:
+        res += ", ".join(map(str, row)) + '\n'
+    return res
+
+
 def print_result(orig_graph, tree):
     diameter = tree.diameter
     print(f'c Вес дерева = {sum(map(lambda e: e[2], tree.edges))}, диаметр = {diameter[2]}, диаметр_w = {diameter}')
@@ -32,9 +39,9 @@ def print_result_to_file(d, orig_graph, tree):
 
 def edge_to_str(edge):
     if edge[0] < edge[1]:
-        return str(edge[0]) + " " + str(edge[1])
+        return str(edge[0]+1) + " " + str(edge[1]+1)
     else:
-        return str(edge[1]) + " " + str(edge[0])
+        return str(edge[1]+1) + " " + str(edge[0]+1)
 
 
 def print_formatted_matrix(matrix):

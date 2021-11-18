@@ -1,6 +1,8 @@
 import sys
+from collections import deque
 
 import print_utils
+import numpy as np
 from checkers.connected_components_counter import count_connected_components
 from graph_reader import read_matrix
 from checkers.loop_finder import has_loop
@@ -8,15 +10,19 @@ from checkers.loop_finder import has_loop
 
 def read_res(filepath):
     with open(filepath, 'r', encoding='utf-8') as file:
-        weight = int(file.readline().split(', ')[0].split(' ')[-1])
+        info = file.readline().split(', ')
+        weight = int(info[0].split(' ')[-1])
+        d = int(info[1].split(' ')[-1])
         n = int(file.readline().split(' ')[-1])
         edges = [list(map(int, line.lstrip('e ').split(' '))) for line in file.readlines()[:n]]
+        edges = list(map(lambda e: [e[0]-1, e[1]-1], [edge for edge in edges]))
         print(f'v = {len(edges) + 1}')
         print(f'w = {weight}')
         print(f'n = {n}')
+        print(f'd = {d}')
         # for row in edges:
         #     print(row)
-    return edges, weight, len(edges) + 1
+    return edges, weight, len(edges) + 1, d
 
 
 def check_edge_existing(graph, edges, weight):
@@ -34,15 +40,52 @@ def create_tree_by_edge(graph, edges, n):
     return tree
 
 
+def bfs_by_matrix(graph, n, node):
+    dist = [0 for i in range(n)]
+    queue = deque()
+    visited = {node}
+    queue.append(node)
+    while queue:
+        s = queue.popleft()
+        for neighbor_i, neighbor_dist in enumerate(graph[s]):
+            if neighbor_dist != 0 and neighbor_i not in visited:
+                dist[neighbor_i] = dist[s] + 1
+                visited.add(neighbor_i)
+                queue.append(neighbor_i)
+    return dist
+
+
+def diameter(tree, n, start):
+    from_node = to_node = 0
+    start_node = start
+
+    dist = bfs_by_matrix(tree, n, start_node)
+
+    # for i, value in enumerate(dist):
+    #     if dist[i] > dist[from_node]:
+    #         from_node = i
+    from_node = np.argmax(dist)
+    dist = bfs_by_matrix(tree, n, from_node)
+
+    # for i, value in enumerate(dist):
+    #     if dist[i] > dist[to_node]:
+    #         to_node = i
+    to_node = np.argmax(dist)
+    return from_node, to_node, dist[to_node]
+
+
 def main():
     res_file_path = sys.argv[1]
-    edges, weight, n = read_res(res_file_path)
+    edges, weight, n, d = read_res(res_file_path)
     graph = read_matrix(f'Taxicab_{n}_matrix.txt')
     print(f'Edges existing: {check_edge_existing(graph, edges, weight)}')
     print(f'Loop existing:  {has_loop(n, edges)}')
     print(f'Connected components:  {count_connected_components(n, edges)}')
+    diam = diameter(create_tree_by_edge(graph, edges, n), n, edges[0][0])
+    print(f'Diameter:  {diam}, {diam[2]==d}')
     if len(sys.argv) > 2:
-        print_utils.print_matrix(create_tree_by_edge(graph, edges, n))
+        with open('checker_matrix.txt', 'w', encoding='utf-8') as f:
+            f.write(print_utils.matrix_to_str(create_tree_by_edge(graph, edges, n)))
 
 
 if __name__ == '__main__':

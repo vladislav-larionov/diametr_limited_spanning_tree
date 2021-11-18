@@ -16,7 +16,6 @@ def result_to_str(result: Tree):
 def find_diameter_limited_spanning_tree(graph, n, d):
     solution = None
     results = set()
-    # for i in range(0, len(graph), 4):
     for i in range(n):
         spanning_tree = find_spanning_tree(graph, n, i, d, solution.weight if solution else None)
         if not spanning_tree:

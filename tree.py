@@ -73,7 +73,7 @@ class Tree:
         from_node = np.argmax(dist)
 
         dist = self._bfs(self.n, from_node)
-        # dist = self._bfs(tree, self.n, start_node)
+        # dist = self._bfs(tree, self.n, from_node)
 
         # for i, value in enumerate(dist):
         #     if dist[i] > dist[to_node]:
