@@ -84,7 +84,7 @@ def main():
     diam = diameter(create_tree_by_edge(graph, edges, n), n, edges[0][0])
     print(f'Diameter:  {diam}, {diam[2]==d}')
     if len(sys.argv) > 2:
-        with open('checker_matrix.txt', 'w', encoding='utf-8') as f:
+        with open('checked_matrix.txt', 'w', encoding='utf-8') as f:
             f.write(print_utils.matrix_to_str(create_tree_by_edge(graph, edges, n)))
 
 
