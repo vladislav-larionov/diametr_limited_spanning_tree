@@ -13,16 +13,18 @@ def read_res(filepath):
         info = file.readline().split(', ')
         weight = int(info[0].split(' ')[-1])
         d = int(info[1].split(' ')[-1])
-        n = int(file.readline().split(' ')[-1])
+        tree_info = file.readline().split(' ')
+        n = int(tree_info[-2])
+        e = int(tree_info[-1])
         edges = [list(map(int, line.lstrip('e ').split(' '))) for line in file.readlines()[:n]]
         edges = list(map(lambda e: [e[0]-1, e[1]-1], [edge for edge in edges]))
-        print(f'v = {len(edges) + 1}')
         print(f'w = {weight}')
         print(f'n = {n}')
+        print(f'edges = {e}')
         print(f'd = {d}')
         # for row in edges:
         #     print(row)
-    return edges, weight, len(edges) + 1, d
+    return edges, weight, n, d, e
 
 
 def check_edge_existing(graph, edges, weight):
@@ -74,10 +76,20 @@ def diameter(tree, n, start):
     return from_node, to_node, dist[to_node]
 
 
+def edges_to_node_set(edges):
+    nodes = set()
+    for e in edges:
+        nodes.add(e[0])
+        nodes.add(e[1])
+    return nodes
+
+
 def main():
     res_file_path = sys.argv[1]
-    edges, weight, n, d = read_res(res_file_path)
+    edges, weight, n, d, e = read_res(res_file_path)
     graph = read_matrix(f'Taxicab_{n}_matrix.txt')
+    print(f'Nodes: {len(edges_to_node_set(edges))} {n == len(edges_to_node_set(edges))}')
+    print(f'Edges: {len(edges)} {len(edges) == e}')
     print(f'Edges existing: {check_edge_existing(graph, edges, weight)}')
     print(f'Loop existing:  {has_loop(n, edges)}')
     print(f'Connected components:  {count_connected_components(n, edges)}')
