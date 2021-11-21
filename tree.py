@@ -24,6 +24,19 @@ class Tree:
         self.adj_matrix = [[0] * self.n for _ in range(self.n)]
         self.adj_list = [set() for _ in range(self.n)]
 
+    def get_leaves(self):
+        leaves = []
+        for i, v in enumerate(self.adj_list):
+            if len(v) == 1:
+                leaves.append(i)
+        l_edges = []
+        for leaf in leaves:
+            for i, v in enumerate(self.adj_list):
+                if leaf in v:
+                    l_edges.append((i, leaf, self.adj_matrix[i][leaf]))
+        return l_edges
+
+
     @property
     def weight(self):
         return sum(edge[2] for edge in self.edges)
@@ -38,7 +51,12 @@ class Tree:
     def remove_edge(self, edge: tuple):
         self.adj_matrix[edge[0]][edge[1]] = 0
         self.adj_matrix[edge[1]][edge[0]] = 0
-        self.edges.remove(edge)
+        if (edge[1], edge[0], edge[2]) in self.edges:
+            self.edges.remove((edge[1], edge[0], edge[2]))
+        elif (edge[0], edge[1], edge[2]) in self.edges:
+            self.edges.remove((edge[0], edge[1], edge[2]))
+        else:
+            print()
         self.adj_list[edge[0]].remove(edge[1])
         self.adj_list[edge[1]].remove(edge[0])
 

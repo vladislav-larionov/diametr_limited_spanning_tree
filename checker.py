@@ -91,8 +91,10 @@ def main():
     print(f'Nodes: {len(edges_to_node_set(edges))} {n == len(edges_to_node_set(edges))}')
     print(f'Edges: {len(edges)} {len(edges) == e}')
     print(f'Edges existing: {check_edge_existing(graph, edges, weight)}')
-    print(f'Loop existing:  {has_loop(n, edges)}')
-    print(f'Connected components:  {count_connected_components(n, edges)}')
+    loop = has_loop(n, edges)
+    print(f'Loop existing:  {loop} {loop == False}')
+    components = count_connected_components(n, edges)
+    print(f'Connected components:  {components} {1 == components}')
     diam = diameter(create_tree_by_edge(graph, edges, n), n, edges[0][0])
     print(f'Diameter:  {diam}, {diam[2]==d}')
     if len(sys.argv) > 2:

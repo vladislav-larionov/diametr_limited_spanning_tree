@@ -1,7 +1,9 @@
+from datetime import datetime
 from sys import argv
 
-from graph_reader import read_matrix
-from print_utils import print_matrix, print_result, print_result_to_file, edge_to_str
+import print_utils
+from graph_reader import read_matrix, read_vertexes, compute_distance
+from print_utils import print_matrix, print_result, print_result_to_file, edge_to_str, print_formatted_matrix
 from timer_util import timeit
 from tree import Tree
 
@@ -13,7 +15,8 @@ def result_to_str(result: Tree):
     return res
 
 
-def find_diameter_limited_spanning_tree(graph, n, d):
+def find_diameter_limited_spanning_tree(graph, n, d, vertexes):
+    # radius, v_i, v = find_center(vertexes)
     solution = None
     results = set()
     for i in range(n):
@@ -31,41 +34,58 @@ def find_diameter_limited_spanning_tree(graph, n, d):
     return solution
 
 
-# def find_diameter_limited_spanning_tree(graph, n, d):
-#     solution = find_spanning_tree(graph, n, 0, d, None)
-#     # print_result_to_file(d, graph, solution)
+# def find_diameter_limited_spanning_tree(graph, n, d, vertexes):
+#     radius, v_i, v = find_center(vertexes)
+#     solution = find_spanning_tree(graph, n, v_i, d, None)
+#     print_result_to_file(d, graph, solution)
 #     return solution
 
-def find_spanning_tree(graph, n: int,  start_node: int, d, old_res: int):
-    # TODO  подумать о том, чтобы дополнять список кандидатов при поиске соседей и добавлении вершины
-    # TODO  опробовать брать рёбра, которые дают наименьший диаметр
+
+def find_spanning_tree(graph, n: int, start_node: int, d, old_res: int):
+    depths = [0 for _ in range(n)]
     tree = Tree(n)
     tree.nodes.add(start_node)
-    max_edge_count = tree.n - 1
+    max_depth = int(d/2)
     bad_edges = set()
-    for i in range(max_edge_count):
+    tree, depths, bad_edges = construct_spanning_tree(graph, tree, max_depth, depths, bad_edges, old_res)
+    if not tree:
+        return tree
+    leaves = tree.get_leaves()
+    for leaf in leaves:
+        tree.nodes.remove(leaf[1])
+        tree.remove_edge(leaf)
+        depths[leaf[1]] = 0
+    tree, depths, bad_edges = construct_spanning_tree(graph, tree, max_depth, depths, bad_edges, old_res)
+    return tree
+
+
+def construct_spanning_tree(graph, tree, max_depth, depths, bad_edges, old_res):
+    max_edge_count = tree.n - 1
+    while len(tree.edges) < max_edge_count:
         if old_res and tree.weight > old_res:
-            return None
+            return None, None, None
         candidates = set()
         for node in tree.nodes:
-            # TODO Попробовать брать все с одинаковым весом
-            # nearest_nodes = find_nearest_neighbors(graph, tree, node)
-            # candidates.update((node, nearest_node, graph[node][nearest_node]) for nearest_node in nearest_nodes)
-            nearest_node = find_nearest_neighbor(graph, tree, node)
-            candidates.add((node, nearest_node, graph[node][nearest_node]))
+            nearest_nodes = find_nearest_neighbors(graph, tree, node)
+            candidates.update((node, nearest_node, graph[node][nearest_node]) for nearest_node in nearest_nodes)
+        # candidates = {(node, nearest_node, graph[node][nearest_node])
+        #               for node in tree.nodes
+        #               for nearest_node in find_nearest_neighbors(graph, tree, node)}
         candidates.difference_update(bad_edges)
         while True:
             min_edge = find_min_edge(candidates)
+            candidates.remove(min_edge)
             tree.nodes.add(min_edge[1])
             tree.add_edge(min_edge)
-            diameter = tree.diameter
-            if diameter[2] <= d:
+            depths[min_edge[1]] = depths[min_edge[0]] + 1
+            if depths[min_edge[1]] > max_depth:
+                depths[min_edge[1]] = 0
+                tree.nodes.remove(min_edge[1])
+                tree.remove_edge_by_index(-1)
+                bad_edges.add(min_edge)
+            else:
                 break
-            tree.nodes.remove(min_edge[1])
-            tree.remove_edge_by_index(-1)
-            candidates.remove(min_edge)
-            bad_edges.add(min_edge)
-    return tree
+    return tree, depths, bad_edges
 
 
 def find_nearest_neighbor(graph, tree, node):
@@ -76,6 +96,14 @@ def find_nearest_neighbor(graph, tree, node):
             min_dist = neighbor_dist
             node_index = neighbor_i
     return node_index
+
+
+def find_neighbors_in_radius(graph, tree, node, radius) -> list:
+    node_indies = []
+    for neighbor_i, neighbor_dist in enumerate(graph[node]):
+        if neighbor_i not in tree.nodes and neighbor_dist != 0 and neighbor_dist <= radius:
+            node_indies.append(neighbor_i)
+    return node_indies
 
 
 def find_nearest_neighbors(graph, tree, node) -> list:
@@ -96,14 +124,41 @@ def find_min_edge(edges):
     return min(edges, key=lambda edge: edge[2])
 
 
+def find_center(vertexes):
+    p_max = list(vertexes[0])
+    p_min = list(vertexes[0])
+    for v in vertexes:
+        if v[0] > p_max[0]:
+            p_max[0] = v[0]
+        if v[1] > p_max[1]:
+            p_max[1] = v[1]
+        if p_min[0] > v[0]:
+            p_min[0] = v[0]
+        if p_min[1] > v[1]:
+            p_min[1] = v[1]
+
+    p_center = (int((p_max[0] + p_min[0]) / 2), int((p_max[1] + p_min[1]) / 2))
+    r = compute_distance(p_center, p_max) / 2
+    v_center = 0
+    for i, v in enumerate(vertexes):
+        if compute_distance(v, p_center) < compute_distance(vertexes[v_center], p_center):
+            v_center = i
+    return r, v_center, vertexes[v_center]
+
+
 @timeit
 def main():
     graph = read_matrix(argv[1])
     d = int(len(graph) / 32 + 2)
     n = len(graph)
+    # print_formatted_matrix(graph)
+    vertexes = read_vertexes(f'Benchmark/Taxicab_{n}.txt')
     print(f'Max diameter = {d}', f'N = {n}', sep='\n')
-    tree = find_diameter_limited_spanning_tree(graph, n, d)
+    print(f'start: {datetime.now()}')
+    tree = find_diameter_limited_spanning_tree(graph, n, d, vertexes)
     print_result(graph, tree)
+    with open('res_matrix.txt', 'w', encoding='utf-8') as f:
+        f.write(print_utils.matrix_to_str(tree.adj_matrix))
     # print_matrix(tree.adj_matrix)
 
 
