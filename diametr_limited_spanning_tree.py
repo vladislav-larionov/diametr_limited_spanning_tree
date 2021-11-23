@@ -28,36 +28,36 @@ def find_diameter_limited_spanning_tree(graph, n, d, vertexes):
     radius, v_i, v = find_center(vertexes)
     results = set()
     solution = Res()
-    # with ProcessPoolExecutor(max_workers=4) as executor:
-    #     executors = [executor.submit(find_spanning_tree, graph, n, i, d, solution, v_i) for i in range(0, n)]
-    #     for future in as_completed(executors):
-    #         spanning_tree = future.result()
-    #         if not spanning_tree:
-    #             continue
-    #         stringed_res = result_to_str(spanning_tree)
-    #         if stringed_res not in results:
-    #             print_result_to_file(d, graph, spanning_tree)
-    #         results.add(stringed_res)
-    #         if solution.v is None:
-    #             solution.v = spanning_tree.weight
-    #             solution.t = spanning_tree
-    #         elif solution.v > spanning_tree.weight:
-    #             solution.v = spanning_tree.weight
-    #             solution.t = spanning_tree
-    for i in range(n):
-        spanning_tree = find_spanning_tree(graph, n, i, d, solution, v_i)
-        if not spanning_tree:
-            continue
-        stringed_res = result_to_str(spanning_tree)
-        if stringed_res not in results:
-            print_result_to_file(d, graph, spanning_tree)
-        results.add(stringed_res)
-        if solution.v is None:
-            solution.v = spanning_tree.weight
-            solution.t = spanning_tree
-        elif solution.v > spanning_tree.weight:
-            solution.v = spanning_tree.weight
-            solution.t = spanning_tree
+    with ProcessPoolExecutor(max_workers=4) as executor:
+        executors = [executor.submit(find_spanning_tree, graph, n, i, d, solution, v_i) for i in range(0, n)]
+        for future in as_completed(executors):
+            spanning_tree = future.result()
+            if not spanning_tree:
+                continue
+            stringed_res = result_to_str(spanning_tree)
+            if stringed_res not in results:
+                print_result_to_file(d, graph, spanning_tree)
+            results.add(stringed_res)
+            if solution.v is None:
+                solution.v = spanning_tree.weight
+                solution.t = spanning_tree
+            elif solution.v > spanning_tree.weight:
+                solution.v = spanning_tree.weight
+                solution.t = spanning_tree
+    # for i in range(n):
+    #     spanning_tree = find_spanning_tree(graph, n, i, d, solution, v_i)
+    #     if not spanning_tree:
+    #         continue
+    #     stringed_res = result_to_str(spanning_tree)
+    #     if stringed_res not in results:
+    #         print_result_to_file(d, graph, spanning_tree)
+    #     results.add(stringed_res)
+    #     if solution.v is None:
+    #         solution.v = spanning_tree.weight
+    #         solution.t = spanning_tree
+    #     elif solution.v > spanning_tree.weight:
+    #         solution.v = spanning_tree.weight
+    #         solution.t = spanning_tree
     return solution.t
 
 
@@ -76,14 +76,13 @@ def find_spanning_tree(graph, n: int, start_node: int, d, old_res, v_i):
     # tree.add_edge((start_node, v_i, graph[start_node][v_i]))
     # depths[v_i] = depths[start_node] + 1
     max_depth = int(d/2)
-    bad_edges = set()
-    tree, depths, bad_edges = construct_spanning_tree(graph, tree, max_depth, depths, bad_edges, old_res)
+    tree, depths = construct_spanning_tree(graph, tree, max_depth, depths, old_res)
     if not tree:
         return tree
     print_result_to_file(d, graph, tree)
     optimized_tree = deepcopy(tree)
     remove_leaves(optimized_tree, depths)
-    optimized_tree, depths, bad_edges = construct_spanning_tree(graph, optimized_tree, max_depth, depths, bad_edges, old_res)
+    optimized_tree, depths = construct_spanning_tree(graph, optimized_tree, max_depth, depths, old_res)
     if optimized_tree and tree.weight > optimized_tree.weight:
         return optimized_tree
     return tree
@@ -98,25 +97,37 @@ def remove_leaves(tree, depths):
         tree.nodes.remove(leaf)
 
 
-def construct_spanning_tree(graph, tree, max_depth, depths, bad_edges, old_res: Res):
+def construct_spanning_tree(graph, tree, max_depth, depths, old_res: Res):
     max_edge_count = tree.n - 1
     while len(tree.edges) < max_edge_count:
         if old_res.v and tree.weight > old_res.v:
-            return None, None, None
-        candidates = set()
+            return None, None
+        candidates = list()
+        # for node in tree.nodes:
+        #     if depths[node] + 1 <= max_depth:
+        #         nearest_nodes = find_nearest_neighbors(graph, tree, node)
+        #         candidates.update((node, nearest_node, graph[node][nearest_node], depths[node] + 1) for nearest_node in nearest_nodes)
         for node in tree.nodes:
             if depths[node] + 1 <= max_depth:
-                nearest_nodes = find_nearest_neighbors(graph, tree, node)
-                candidates.update((node, nearest_node, graph[node][nearest_node]) for nearest_node in nearest_nodes)
-        candidates.difference_update(bad_edges)
-        while True:
-            min_edge = find_min_edge(candidates)
-            candidates.remove(min_edge)
-            depths[min_edge[1]] = depths[min_edge[0]] + 1
-            tree.nodes.add(min_edge[1])
-            tree.add_edge(min_edge)
-            break
-    return tree, depths, bad_edges
+                candidates.extend(find_candidates(graph, node, tree.nodes, max_depth, depths))
+
+        # min_edges = find_min_edge(candidates)
+        min_edges = candidates
+        min_edges.sort(key=lambda edge: (edge[2], edge[3]), reverse=True)
+        min_edge = min_edges[-1]
+        # candidates.remove((min_edge[0], min_edge[1], min_edge[2]))
+        depths[min_edge[1]] = depths[min_edge[0]] + 1
+        tree.nodes.add(min_edge[1])
+        tree.add_edge((min_edge[0], min_edge[1], min_edge[2]))
+    return tree, depths
+
+
+def find_candidates(graph, node, stop_list, max_depth, depths):
+    candidates = set()
+    if depths[node] + 1 <= max_depth:
+        nearest_nodes = find_nearest_neighbors(graph, stop_list, node)
+        candidates.update((node, nearest_node, graph[node][nearest_node], depths[node] + 1) for nearest_node in nearest_nodes)
+    return candidates
 
 
 def find_nearest_neighbor(graph, tree, node):
@@ -137,11 +148,11 @@ def find_neighbors_in_radius(graph, tree, node, radius) -> list:
     return node_indies
 
 
-def find_nearest_neighbors(graph, tree, node) -> list:
+def find_nearest_neighbors(graph, stop_list, node) -> list:
     min_dist = 999999999
     node_indies = []
     for neighbor_i, neighbor_dist in enumerate(graph[node]):
-        if neighbor_i not in tree.nodes and neighbor_dist != 0:
+        if neighbor_i not in stop_list and neighbor_dist != 0:
             if neighbor_dist < min_dist:
                 min_dist = neighbor_dist
                 node_indies.clear()
@@ -152,7 +163,20 @@ def find_nearest_neighbors(graph, tree, node) -> list:
 
 
 def find_min_edge(edges):
-    return min(edges, key=lambda edge: edge[2])
+    # return min(edges, key=lambda edge: edge[2])
+    mins = []
+    min_v = None
+    for edge in edges:
+        if min_v is None:
+            mins.append(edge)
+            min_v = edge[2]
+        elif edge[2] < min_v:
+            min_v = edge[2]
+            mins.clear()
+            mins.append(edge)
+        elif edge[2] == min_v:
+            mins.append(edge)
+    return mins
 
 
 def find_center(vertexes):

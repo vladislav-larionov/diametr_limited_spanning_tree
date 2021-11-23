@@ -49,5 +49,6 @@ def read_matrix(filename):
 
 if __name__ == '__main__':
     graph = read_matrix('Taxicab_64_matrix.txt')
-    print(graph)
+    matrix_to_edge_list(graph)
+    # print(graph)
 
