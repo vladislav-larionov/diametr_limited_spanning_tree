@@ -14,16 +14,18 @@ def matrix_to_str(matrix):
 
 def print_result(orig_graph, tree):
     diameter = tree.diameter
-    print(f'c Вес дерева = {sum(map(lambda e: e[2], tree.edges))}, диаметр = {diameter[2]}, диаметр_w = {diameter}')
+    print(f'c Вес дерева = {sum(map(lambda e: e[2], tree.edges))}, диаметр = {diameter}')
     print(f'p edge {len(orig_graph)} {len(tree.edges)}')
     for e in sorted([f"e {edge_to_str(edge)}\n" for edge in tree.edges]):
         print(e, end='')
 
 
-def print_result_to_file(d, orig_graph, tree):
-    with open(f'temp_res_{d}.txt', 'a+', encoding='utf-8') as file:
+def print_result_to_file(d, orig_graph, tree, file_name=None):
+    if not file_name:
+        file_name = f'temp_res_{d}.txt'
+    with open(file_name, 'a+', encoding='utf-8') as file:
         diameter = tree.diameter
-        file.write(f'c Вес дерева = {sum(map(lambda e: e[2], tree.edges))}, диаметр = {diameter[2]}, диаметр_w = {diameter}\n')
+        file.write(f'c Вес дерева = {sum(map(lambda e: e[2], tree.edges))}, диаметр = {diameter}\n')
         file.write(f'p edge {len(orig_graph)} {len(tree.edges)}\n')
         for e in sorted([f"e {edge_to_str(edge)}\n" for edge in tree.edges]):
             file.write(e)

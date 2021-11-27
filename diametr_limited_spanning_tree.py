@@ -1,18 +1,16 @@
-from concurrent.futures import ThreadPoolExecutor, as_completed, ProcessPoolExecutor
+from concurrent.futures import as_completed, ProcessPoolExecutor
 from copy import deepcopy
-from datetime import datetime
 from sys import argv
 
-import print_utils
 from graph_reader import read_matrix, read_vertexes, compute_distance
-from print_utils import print_matrix, print_result, print_result_to_file, edge_to_str, print_formatted_matrix
+from print_utils import print_result, print_result_to_file, edge_to_str, print_formatted_matrix
 from timer_util import timeit
 from tree import Tree
 
 
 def result_to_str(result: Tree):
     diameter = result.diameter
-    res = f'{result.weight} {diameter[2]} {edge_to_str([diameter[0], diameter[1]])}'
+    res = f'{result.weight} {diameter}'
     res += ''.join(sorted([f"e {edge_to_str(edge)}\n" for edge in result.edges]))
     return res
 
@@ -23,12 +21,11 @@ class Res:
         self.t = None
 
 
-# Взять центр и попробовать перебирать значения отталкиваясь от него
 def find_diameter_limited_spanning_tree(graph, n, d, vertexes):
     radius, v_i, v = find_center(vertexes)
     results = set()
     solution = Res()
-    with ProcessPoolExecutor(max_workers=4) as executor:
+    with ProcessPoolExecutor(max_workers=2) as executor:
         executors = [executor.submit(find_spanning_tree, graph, n, i, d, solution, v_i) for i in range(0, n)]
         for future in as_completed(executors):
             spanning_tree = future.result()
@@ -61,20 +58,10 @@ def find_diameter_limited_spanning_tree(graph, n, d, vertexes):
     return solution.t
 
 
-# def find_diameter_limited_spanning_tree(graph, n, d, vertexes):
-#     radius, v_i, v = find_center(vertexes)
-#     solution = find_spanning_tree(graph, n, v_i, d, None)
-#     print_result_to_file(d, graph, solution)
-#     return solution
-
-
 def find_spanning_tree(graph, n: int, start_node: int, d, old_res, v_i):
     depths = [0 for _ in range(n)]
     tree = Tree(n)
     tree.nodes.add(start_node)
-    # tree.nodes.add(v_i)
-    # tree.add_edge((start_node, v_i, graph[start_node][v_i]))
-    # depths[v_i] = depths[start_node] + 1
     max_depth = int(d/2)
     tree, depths = construct_spanning_tree(graph, tree, max_depth, depths, old_res)
     if not tree:
@@ -88,13 +75,19 @@ def find_spanning_tree(graph, n: int, start_node: int, d, old_res, v_i):
     return tree
 
 
-def remove_leaves(tree, depths):
+def remove_leaves(tree, depths, count=None):
     l_edges, leaves = tree.get_leaves()
-    for leaf in l_edges:
-        tree.remove_edge(leaf)
-        depths[leaf[1]] = 0
-    for leaf in leaves:
-        tree.nodes.remove(leaf)
+    if count:
+        for leaf in l_edges[:count]:
+            tree.remove_edge(leaf)
+            depths[leaf[1]] = 0
+            tree.nodes.remove(leaf[1])
+    else:
+        for leaf in l_edges:
+            tree.remove_edge(leaf)
+            depths[leaf[1]] = 0
+        for leaf in leaves:
+            tree.nodes.remove(leaf)
 
 
 def construct_spanning_tree(graph, tree, max_depth, depths, old_res: Res):
@@ -103,10 +96,6 @@ def construct_spanning_tree(graph, tree, max_depth, depths, old_res: Res):
         if old_res.v and tree.weight > old_res.v:
             return None, None
         candidates = list()
-        # for node in tree.nodes:
-        #     if depths[node] + 1 <= max_depth:
-        #         nearest_nodes = find_nearest_neighbors(graph, tree, node)
-        #         candidates.update((node, nearest_node, graph[node][nearest_node], depths[node] + 1) for nearest_node in nearest_nodes)
         for node in tree.nodes:
             if depths[node] + 1 <= max_depth:
                 candidates.extend(find_candidates(graph, node, tree.nodes, max_depth, depths))
@@ -115,7 +104,6 @@ def construct_spanning_tree(graph, tree, max_depth, depths, old_res: Res):
         min_edges = candidates
         min_edges.sort(key=lambda edge: (edge[2], edge[3]), reverse=True)
         min_edge = min_edges[-1]
-        # candidates.remove((min_edge[0], min_edge[1], min_edge[2]))
         depths[min_edge[1]] = depths[min_edge[0]] + 1
         tree.nodes.add(min_edge[1])
         tree.add_edge((min_edge[0], min_edge[1], min_edge[2]))
@@ -206,7 +194,6 @@ def main():
     graph = read_matrix(argv[1])
     d = int(len(graph) / 32 + 2)
     n = len(graph)
-    # print_formatted_matrix(graph)
     vertexes = read_vertexes(f'Benchmark/Taxicab_{n}.txt')
     print(f'Max diameter = {d}', f'N = {n}', sep='\n')
     tree = find_diameter_limited_spanning_tree(graph, n, d, vertexes)

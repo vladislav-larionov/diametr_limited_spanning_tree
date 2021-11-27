@@ -95,7 +95,8 @@ class Tree:
         #     if dist[i] > dist[to_node]:
         #         to_node = i
         to_node = np.argmax(dist)
-        return from_node, to_node, dist[to_node]
+        # return from_node, to_node, dist[to_node]
+        return dist[to_node]
 
     def _bfs(self, n, node):
         dist = [0 for i in range(n)]
